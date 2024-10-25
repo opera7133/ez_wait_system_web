@@ -11,7 +11,7 @@ const AdminLogin = () => {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const handleLogin = async (e) => {
+  const handleLogin = async (e: any) => {
     e.preventDefault();
     try {
       await signInWithEmailAndPassword(auth, email, password);
