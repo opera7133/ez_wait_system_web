@@ -34,7 +34,10 @@ export const registerLineId = async (id: string, lineId: string) => {
 // 呼び出しステータスに変更
 export const callTicket = async (id: string, userId?: string) => {
   try {
-    await updateDoc(doc(db, "QUEUE", id), { status: "called" });
+    await updateDoc(doc(db, "QUEUE", id), {
+      status: "called",
+      calledAt: new Date(),
+    });
     if (userId) await axios.post("/api/sendline", { id, userId });
   } catch (error) {
     console.error("呼び出しエラー:", error);
