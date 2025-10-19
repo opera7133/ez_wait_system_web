@@ -54,6 +54,15 @@ const Dashboard = () => {
                   className="bg-orange-100 border border-orange-200 p-4 rounded-lg flex flex-col justify-between items-center"
                 >
                   <span className="text-3xl font-medium">{number.number}</span>
+                  <span className="text-sm text-gray-500 mt-2">
+                    経過時間：約
+                    {Math.floor(
+                      (Date.now() - new Date(number.createdAt).getTime()) /
+                        1000 /
+                        60
+                    )}
+                    分
+                  </span>
                   <div className="flex gap-2">
                     <button
                       onClick={() =>
