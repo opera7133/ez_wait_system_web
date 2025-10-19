@@ -1,50 +1,58 @@
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { NextApiRequest, NextApiResponse } from "next";
+import { Queue } from "@/lib/queue";
 
-export async function getQueueData() {
-  const queueRef = collection(db, "QUEUE");
+export async function getQueueData(): Promise<{
+  waitingList: Queue[];
+  calledList: Queue[];
+}> {
+  const queueRef = collection(db, "QUEUES");
 
   // Firestoreから「待機中」と「呼び出し済み」のデータを取得
-  const waitingQuery = query(queueRef, where("status", "==", "waiting"));
-  const calledQuery = query(queueRef, where("status", "==", "called"));
+  const waitingQuery = query(queueRef, where("called", "==", false));
+  const calledQuery = query(queueRef, where("called", "==", true));
 
   const waitingSnapshot = await getDocs(waitingQuery);
   const calledSnapshot = await getDocs(calledQuery);
 
   const waitingList = waitingSnapshot.docs
     .map((doc) => ({
-      ticketNumber: doc.data().ticketNumber,
-      groupSize: doc.data().groupSize,
+      queueId: doc.id,
+      called: doc.data().called,
+      number: doc.data().number,
+      calledAt: doc.data().calledAt?.toDate().toJSON() || null,
       createdAt: doc.data().createdAt.toDate().toJSON(),
+      lineNotifyId: doc.data().lineNotifyId || null,
     }))
-    .sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
+    .sort((a, b) => b.number - a.number);
 
   const calledList = calledSnapshot.docs
     .map((doc) => ({
-      ticketNumber: doc.data().ticketNumber,
-      groupSize: doc.data().groupSize,
+      queueId: doc.id,
+      called: doc.data().called,
+      number: doc.data().number,
       calledAt: doc.data().calledAt?.toDate().toJSON() || null,
       createdAt: doc.data().createdAt.toDate().toJSON(),
+      lineNotifyId: doc.data().lineNotifyId || null,
     }))
-    .sort((a, b) => Date.parse(b.calledAt) - Date.parse(a.calledAt));
+    .sort((a, b) => b.number - a.number);
   return { waitingList, calledList };
 }
 
-export async function getSingleQueue(id: string) {
-  const queueRef = collection(db, "QUEUE");
+export async function getSingleQueue(id: string): Promise<Queue | undefined> {
+  const queueRef = collection(db, "QUEUES");
   const querySnapshot = await getDocs(queueRef);
   const queue = querySnapshot.docs
     .map((doc) => ({
-      id: doc.id,
-      ticketNumber: doc.data().ticketNumber,
-      groupSize: doc.data().groupSize,
-      status: doc.data().status,
+      queueId: doc.data().queueId,
+      number: doc.data().number,
+      called: doc.data().called || false,
       createdAt: doc.data().createdAt.toDate().toJSON(),
       calledAt: doc.data().calledAt?.toDate().toJSON() || null,
       lineNotifyId: doc.data().lineNotifyId || null,
     }))
-    .find((doc) => doc.id === id);
+    .find((doc) => doc.queueId === id);
   return queue;
 }
 

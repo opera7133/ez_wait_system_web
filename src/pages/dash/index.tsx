@@ -7,25 +7,19 @@ import { NextSeo } from "next-seo";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import Link from "next/link";
-
-type QueueNumber = {
-  id: string;
-  ticketNumber: number;
-  groupSize: number;
-  lineNotifyId?: string;
-};
+import { Queue } from "@/lib/queue";
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const [waitingNumbers, setWaitingNumbers] = useState<QueueNumber[]>([]);
-  const [calledNumbers, setCalledNumbers] = useState<QueueNumber[]>([]);
+  const [waitingNumbers, setWaitingNumbers] = useState<Queue[]>([]);
+  const [calledNumbers, setCalledNumbers] = useState<Queue[]>([]);
 
   useEffect(() => {
     if (!user) return;
 
     // 呼び出し前と呼び出し中の番号をリアルタイム取得
-    const unsubscribeWaiting = fetchQueueNumbers("waiting", setWaitingNumbers);
-    const unsubscribeCalled = fetchQueueNumbers("called", setCalledNumbers);
+    const unsubscribeWaiting = fetchQueueNumbers(false, setWaitingNumbers);
+    const unsubscribeCalled = fetchQueueNumbers(true, setCalledNumbers);
 
     return () => {
       unsubscribeWaiting();
@@ -56,24 +50,21 @@ const Dashboard = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {waitingNumbers.map((number) => (
                 <div
-                  key={number.id}
+                  key={number.queueId}
                   className="bg-orange-100 border border-orange-200 p-4 rounded-lg flex flex-col justify-between items-center"
                 >
-                  <span className="text-3xl font-medium">
-                    {number.ticketNumber}
-                  </span>
-                  <span className="text-sm text-gray-600 mb-2">
-                    人数: {number.groupSize}人
-                  </span>
+                  <span className="text-3xl font-medium">{number.number}</span>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => callTicket(number.id, number.lineNotifyId)}
+                      onClick={() =>
+                        callTicket(number.queueId, number.lineNotifyId)
+                      }
                       className="bg-green-500 duration-150 text-white px-3 py-1 rounded hover:bg-green-600"
                     >
                       呼び出し
                     </button>
                     <button
-                      onClick={() => deleteTicket(number.id)}
+                      onClick={() => deleteTicket(number.queueId)}
                       className="bg-red-500 duration-150 text-white px-3 py-1 rounded hover:bg-red-600"
                     >
                       削除
@@ -96,24 +87,19 @@ const Dashboard = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {calledNumbers.map((number) => (
                 <div
-                  key={number.id}
+                  key={number.queueId}
                   className="bg-green-100 border border-green-200 p-4 rounded-lg flex flex-col justify-between items-center"
                 >
-                  <span className="text-3xl font-medium">
-                    {number.ticketNumber}
-                  </span>
-                  <span className="text-sm text-gray-600 mb-2">
-                    人数: {number.groupSize}人
-                  </span>
+                  <span className="text-3xl font-medium">{number.number}</span>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => cancelCallTicket(number.id)}
+                      onClick={() => cancelCallTicket(number.queueId)}
                       className="bg-yellow-500 duration-150 text-white px-3 py-1 rounded hover:bg-yellow-600"
                     >
                       取り消し
                     </button>
                     <button
-                      onClick={() => deleteTicket(number.id)}
+                      onClick={() => deleteTicket(number.queueId)}
                       className="bg-red-500 duration-150 text-white px-3 py-1 rounded hover:bg-red-600"
                     >
                       削除

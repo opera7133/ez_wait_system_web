@@ -2,22 +2,16 @@ import { GetServerSidePropsContext } from "next";
 import { getQueueData, getSingleQueue } from "./api/queue";
 import { NextSeo } from "next-seo";
 import Link from "next/link";
-
-type Ticket = {
-  id: string;
-  ticketNumber: string;
-  groupSize: number;
-  lineNotifyId?: string;
-};
+import { Queue } from "@/lib/queue";
 
 export default function Home({
   calledNumbers,
   waitingNumbers,
   queue,
 }: {
-  calledNumbers: Ticket[];
-  waitingNumbers: Ticket[];
-  queue: Ticket;
+  calledNumbers: Queue[];
+  waitingNumbers: Queue[];
+  queue: Queue | null;
 }) {
   return (
     <div className="min-h-screen text-black bg-gray-100 p-4">
@@ -31,11 +25,15 @@ export default function Home({
         </h1>
         {queue && (
           <div className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">現在の番号</h2>
+            <h2 className="text-xl font-semibold mb-4">あなたの番号</h2>
             <div className="bg-blue-100 border border-blue-200 p-4 rounded-lg flex flex-col justify-between items-center">
-              <span className="text-3xl font-medium">{queue.ticketNumber}</span>
-              <span className="text-sm text-gray-600">
-                人数: {queue.groupSize}人
+              <span className="text-3xl font-medium">{queue.number}</span>
+              <span className="text-sm text-gray-500 mt-2">
+                経過時間：約
+                {Math.floor(
+                  (Date.now() - new Date(queue.createdAt).getTime()) / 1000 / 60
+                )}
+                分
               </span>
             </div>
           </div>
@@ -46,15 +44,10 @@ export default function Home({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {calledNumbers.map((number) => (
                 <div
-                  key={number.id}
+                  key={number.queueId}
                   className="bg-green-100 border border-green-200 p-4 rounded-lg flex flex-col justify-between items-center"
                 >
-                  <span className="text-3xl font-medium">
-                    {number.ticketNumber}
-                  </span>
-                  <span className="text-sm text-gray-600">
-                    人数: {number.groupSize}人
-                  </span>
+                  <span className="text-3xl font-medium">{number.number}</span>
                 </div>
               ))}
             </div>
@@ -71,15 +64,10 @@ export default function Home({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {waitingNumbers.map((number) => (
                 <div
-                  key={number.id}
+                  key={number.queueId}
                   className="bg-orange-100 border border-orange-200 p-4 rounded-lg flex flex-col justify-between items-center"
                 >
-                  <span className="text-3xl font-medium">
-                    {number.ticketNumber}
-                  </span>
-                  <span className="text-sm text-gray-600">
-                    人数: {number.groupSize}人
-                  </span>
+                  <span className="text-3xl font-medium">{number.number}</span>
                 </div>
               ))}
             </div>
@@ -96,7 +84,7 @@ export default function Home({
             ) : (
               <div className="mt-8 text-center">
                 <a
-                  href={`https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${process.env.NEXT_PUBLIC_LINE_CLIENT_ID}&redirect_uri=${process.env.NEXT_PUBLIC_DOMAIN}/api/callback&state=${queue.id}&bot_prompt=normal&scope=profile%20openid&nonce=foobar&prompt=consent`}
+                  href={`https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${process.env.NEXT_PUBLIC_LINE_CLIENT_ID}&redirect_uri=${process.env.NEXT_PUBLIC_DOMAIN}/api/callback&state=${queue.queueId}&bot_prompt=normal&scope=profile%20openid&nonce=foobar&prompt=consent`}
                   className="bg-lime-600 rounded duration-150 hover:bg-lime-700 text-white w-full block py-2"
                 >
                   LINEと連携する

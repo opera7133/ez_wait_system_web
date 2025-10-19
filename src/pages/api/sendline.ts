@@ -27,13 +27,13 @@ export default async function handler(
       messages: [
         {
           type: "text",
-          text: `あなたの番号 ${queue?.ticketNumber} が呼び出されました。`,
+          text: `あなたの番号 ${queue?.number} が呼び出されました。`,
         },
       ],
     });
 
     res.status(200).json({
-      message: `Sent Message: あなたの番号${queue?.ticketNumber}が呼び出されました。`,
+      message: `Sent Message: あなたの番号${queue?.number}が呼び出されました。`,
     });
   } catch (e) {
     res.status(500).json({ message: `Error: ${e} ` });
